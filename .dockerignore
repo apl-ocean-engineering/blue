@@ -8,4 +8,5 @@
 !blue_demos
 !blue.repos
 !.docker/entrypoints
+!.docker/patches
 !requirements-build.txt

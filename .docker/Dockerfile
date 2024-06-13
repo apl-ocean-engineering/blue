@@ -18,6 +18,7 @@ RUN apt-get -q update \
     clang-tools \
     python3-pip \
     python3-dev \
+    python3-venv \
     lsb-release \
     wget \
     gnupg \
@@ -27,10 +28,11 @@ RUN apt-get -q update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install all ROS dependencies
+#  Don't try to resolve "mavros" or "mavros_extras", we will install those manually
 RUN apt-get -q update \
     && apt-get -q -y upgrade \
     && rosdep update \
-    && rosdep install -y --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} --as-root=apt:false \
+    && rosdep install -y --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} --as-root=apt:false --skip-keys="mavros mavros_extras" \
     && rm -rf src \
     && apt-get autoremove -y \
     && apt-get clean -y \
@@ -40,7 +42,7 @@ FROM ci as robot
 
 # Configure a new non-root user
 ARG USERNAME=blue
-ARG USER_UID=1000
+ARG USER_UID=1001   # ros image now includes a user "ubuntu" at UID 1000
 ARG USER_GID=$USER_UID
 
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -56,8 +58,14 @@ ENV DEBIAN_FRONTEND=noninteractive
 USER $USERNAME
 ENV USER=$USERNAME
 
-# Install MAVROS dependencies
+# Given Ubuntu is now marked as a "Externally managed environment",
+# Create venv for local python packages install by "$USERNAME" with pip
+# Is there a more elegant way to handle this?
 WORKDIR /home/$USERNAME
+RUN python3 -m venv --system-site-packages .venv/blue/
+RUN echo "source /home/$USERNAME/.venv/blue/bin/activate" >> /home/$USERNAME/.bashrc
+
+# Install MAVROS dependencies
 RUN wget https://raw.githubusercontent.com/mavlink/mavros/ros2/mavros/scripts/install_geographiclib_datasets.sh \
     && chmod +x install_geographiclib_datasets.sh \
     && sudo ./install_geographiclib_datasets.sh
@@ -67,7 +75,12 @@ WORKDIR $USER_WORKSPACE
 COPY --chown=$USER_UID:$USER_GID . src/blue
 
 # Install the Python requirements that aren't available as rosdeps
-RUN python3 -m pip install -r $(pwd)/src/blue/requirements-build.txt
+RUN /home/$USERNAME/.venv/blue/bin/pip install -r $(pwd)/src/blue/requirements-build.txt
+
+# Running in a venv, I need to explicitly install some additional dependencies
+# Using venv --system-packages seems to make this worse...
+#RUN /home/$USERNAME/.venv/blue/bin/pip install future empy==3.3.4 catkin_pkg numpy lark lxml pytest
+
 
 # Install gstreamer
 RUN sudo apt-get -q update \
@@ -85,10 +98,18 @@ RUN sudo apt-get -q update \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
 
+# Manually install MAVROS source
+WORKDIR $USER_WORKSPACE/src/
+RUN git clone --depth 1 -b ros2 https://github.com/mavlink/mavros.git
+RUN git clone --depth 1 --recursive -b release/rolling/mavlink https://github.com/mavlink/mavlink-gbp-release.git mavlink
+RUN ls -al $USER_WORKSPACE/src/blue/**
+RUN patch -d mavlink -p 1 < $USER_WORKSPACE/src/blue/.docker/patches/mavlink_standard_library.patch
+WORKDIR $USER_WORKSPACE
+
 RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
     && rosdep update \
-    && rosdep install -y --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} \
+    && rosdep install -y --from-paths src --ignore-src --as-root=pip:false --rosdistro ${ROS_DISTRO} \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
