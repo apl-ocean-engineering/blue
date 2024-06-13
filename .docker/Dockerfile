@@ -77,11 +77,6 @@ COPY --chown=$USER_UID:$USER_GID . src/blue
 # Install the Python requirements that aren't available as rosdeps
 RUN /home/$USERNAME/.venv/blue/bin/pip install -r $(pwd)/src/blue/requirements-build.txt
 
-# Running in a venv, I need to explicitly install some additional dependencies
-# Using venv --system-packages seems to make this worse...
-#RUN /home/$USERNAME/.venv/blue/bin/pip install future empy==3.3.4 catkin_pkg numpy lark lxml pytest
-
-
 # Install gstreamer
 RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \

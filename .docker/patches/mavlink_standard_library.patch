@@ -4,7 +4,7 @@ index ea62c961..35353184 100755
 +++ b/pymavlink/generator/mavgen.py
 @@ -23,8 +23,8 @@ General process:
  '''
- 
+
  from __future__ import print_function
 -from future import standard_library
 -standard_library.install_aliases()
