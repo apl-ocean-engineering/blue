@@ -61,8 +61,13 @@ ENV USER=$USERNAME
 # Given Ubuntu is now marked as a "Externally managed environment",
 # Create venv for local python packages install by "$USERNAME" with pip
 # Is there a more elegant way to handle this?
+#
+# These two ENVs effectively "activate" the venv for all subsequent calls to python
 WORKDIR /home/$USERNAME
-RUN python3 -m venv --system-site-packages .venv/blue/
+ENV VIRTUAL_ENV=/home/$USERNAME/.venv/blue
+RUN python3 -m venv --system-site-packages $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 RUN echo "source /home/$USERNAME/.venv/blue/bin/activate" >> /home/$USERNAME/.bashrc
 
 # Install MAVROS dependencies
@@ -75,7 +80,7 @@ WORKDIR $USER_WORKSPACE
 COPY --chown=$USER_UID:$USER_GID . src/blue
 
 # Install the Python requirements that aren't available as rosdeps
-RUN /home/$USERNAME/.venv/blue/bin/pip install -r $(pwd)/src/blue/requirements-build.txt
+RUN pip install -r $(pwd)/src/blue/requirements-build.txt
 
 # Install gstreamer
 RUN sudo apt-get -q update \
@@ -115,14 +120,14 @@ RUN echo "source ${USER_WORKSPACE}/install/setup.bash" >> /home/$USERNAME/.bashr
 FROM robot as desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV GZ_VERSION=garden
+ENV GZ_VERSION=harmonic
 
-# Install Gazebo Garden: https://gazebosim.org/docs/garden/install_ubuntu
+# Install Gazebo Hamonic: https://gazebosim.org/docs/harmonic/install_ubuntu
 RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
     && sudo apt-get -q update \
     && sudo apt-get -y --quiet --no-install-recommends install \
-    gz-garden \
+    gz-${GZ_VERSION} \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
@@ -131,6 +136,8 @@ RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrin
 RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
     && sudo apt-get -q install --no-install-recommends -y \
+    cppzmq-dev \
+    python3-pexpect \
     python3-wxgtk4.0 \
     rapidjson-dev \
     xterm \
