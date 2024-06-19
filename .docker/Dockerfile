@@ -103,7 +103,6 @@ RUN sudo apt-get -q update \
 WORKDIR $USER_WORKSPACE/src/
 RUN git clone --depth 1 -b ros2 https://github.com/mavlink/mavros.git
 RUN git clone --depth 1 --recursive -b release/rolling/mavlink https://github.com/mavlink/mavlink-gbp-release.git mavlink
-RUN ls -al $USER_WORKSPACE/src/blue/**
 # Lines references in the patch caused import errors in Python3.12; comment them out
 RUN patch -d mavlink -p 1 < $USER_WORKSPACE/src/blue/.docker/patches/mavlink_standard_library.patch
 WORKDIR $USER_WORKSPACE
