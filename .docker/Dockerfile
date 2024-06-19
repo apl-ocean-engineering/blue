@@ -41,13 +41,13 @@ RUN apt-get -q update \
 FROM ci as robot
 
 # Configure a new non-root user
-ARG USERNAME=blue
-ARG USER_UID=1001   # ros image now includes a user "ubuntu" at UID 1000
+#
+# ros image now includes a user "ubuntu" at UID 1000
+ARG USERNAME=ubuntu
+ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && usermod -a -G dialout $USERNAME \
     && echo "source /usr/share/bash-completion/completions/git" >> /home/$USERNAME/.bashrc
@@ -122,7 +122,7 @@ FROM robot as desktop
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GZ_VERSION=harmonic
 
-# Install Gazebo Hamonic: https://gazebosim.org/docs/harmonic/install_ubuntu
+# Install Gazebo Harmonic: https://gazebosim.org/docs/harmonic/install_ubuntu
 RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
     && sudo apt-get -q update \
