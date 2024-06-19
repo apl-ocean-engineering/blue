@@ -58,11 +58,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 USER $USERNAME
 ENV USER=$USERNAME
 
-# Given Ubuntu is now marked as a "Externally managed environment",
-# Create venv for local python packages install by "$USERNAME" with pip
+# Python in Ubuntu is now marked as a "Externally managed environment",
+# Per best practice, create a venv for local python packages
 # Is there a more elegant way to handle this?
 #
-# These two ENVs effectively "activate" the venv for all subsequent calls to python
+# These two ENVs effectively "activate" the venv for subsequent calls to
+# python/pip in the Dockerfile
 WORKDIR /home/$USERNAME
 ENV VIRTUAL_ENV=/home/$USERNAME/.venv/blue
 RUN python3 -m venv --system-site-packages $VIRTUAL_ENV
@@ -103,6 +104,7 @@ WORKDIR $USER_WORKSPACE/src/
 RUN git clone --depth 1 -b ros2 https://github.com/mavlink/mavros.git
 RUN git clone --depth 1 --recursive -b release/rolling/mavlink https://github.com/mavlink/mavlink-gbp-release.git mavlink
 RUN ls -al $USER_WORKSPACE/src/blue/**
+# Lines references in the patch caused import errors in Python3.12; comment them out
 RUN patch -d mavlink -p 1 < $USER_WORKSPACE/src/blue/.docker/patches/mavlink_standard_library.patch
 WORKDIR $USER_WORKSPACE
 
