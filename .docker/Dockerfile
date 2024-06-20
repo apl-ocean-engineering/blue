@@ -71,17 +71,12 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN echo "source /home/$USERNAME/.venv/blue/bin/activate" >> /home/$USERNAME/.bashrc
 
-# Install MAVROS dependencies
-RUN wget https://raw.githubusercontent.com/mavlink/mavros/ros2/mavros/scripts/install_geographiclib_datasets.sh \
-    && chmod +x install_geographiclib_datasets.sh \
-    && sudo ./install_geographiclib_datasets.sh
-
 ENV USER_WORKSPACE=/home/$USERNAME/ws_blue
 WORKDIR $USER_WORKSPACE
 COPY --chown=$USER_UID:$USER_GID . src/blue
 
 # Install the Python requirements that aren't available as rosdeps
-RUN pip install -r $(pwd)/src/blue/requirements-build.txt
+RUN python3 -m pip install -r $(pwd)/src/blue/requirements-build.txt
 
 # Install gstreamer
 RUN sudo apt-get -q update \
@@ -99,11 +94,13 @@ RUN sudo apt-get -q update \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
 
-# Manually install MAVROS source
+# Manually install MAVROS from source in the ws_blue/ workspace
 WORKDIR $USER_WORKSPACE/src/
 RUN git clone --depth 1 -b ros2 https://github.com/mavlink/mavros.git
 RUN git clone --depth 1 --recursive -b release/rolling/mavlink https://github.com/mavlink/mavlink-gbp-release.git mavlink
-# Lines references in the patch caused import errors in Python3.12; comment them out
+
+# mavgen uses future.standard_library for backwards compatibility with Python2;
+# However, this caused issues in Python3.12.    Comment those lines out
 RUN patch -d mavlink -p 1 < $USER_WORKSPACE/src/blue/.docker/patches/mavlink_standard_library.patch
 WORKDIR $USER_WORKSPACE
 
@@ -114,6 +111,13 @@ RUN sudo apt-get -q update \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
+
+# Install geographiclib datasets
+# Scripts uses geographiclib-tools which is a rosdep dependency of mavros installed above
+WORKDIR /tmp
+RUN wget https://raw.githubusercontent.com/mavlink/mavros/ros2/mavros/scripts/install_geographiclib_datasets.sh \
+    && chmod +x /tmp/install_geographiclib_datasets.sh \
+    && sudo /tmp/install_geographiclib_datasets.sh
 
 RUN echo "source ${USER_WORKSPACE}/install/setup.bash" >> /home/$USERNAME/.bashrc \
     && echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /home/$USERNAME/.bashrc
