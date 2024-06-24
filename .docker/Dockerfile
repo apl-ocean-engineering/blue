@@ -54,6 +54,16 @@ RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# This is ... a very bad way to solve this ...
+# but it appears to be the most effective way to make colcon play
+# nice with venvs
+#
+# Changes the first line of /usr/bin/colcon to use
+# the python3 binary in the venv (if activated)
+#
+# #!/usr/bin/python3  --> #!/usr/bin/env python3
+RUN sed -i '1s/python3/env python3/' /usr/bin/colcon
+
 # Switch to the non-root user for the rest of the installation
 USER $USERNAME
 ENV USER=$USERNAME
@@ -66,9 +76,11 @@ ENV USER=$USERNAME
 # python/pip in the Dockerfile
 WORKDIR /home/$USERNAME
 ENV VIRTUAL_ENV=/home/$USERNAME/.venv/blue
-RUN python3 -m venv --system-site-packages $VIRTUAL_ENV
+RUN python3 -m venv --system-site-packages --symlinks $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+# ROS must be activated before the venv (?)
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /home/$USERNAME/.bashrc
 RUN echo "source /home/$USERNAME/.venv/blue/bin/activate" >> /home/$USERNAME/.bashrc
 
 ENV USER_WORKSPACE=/home/$USERNAME/ws_blue
@@ -119,8 +131,7 @@ RUN wget https://raw.githubusercontent.com/mavlink/mavros/ros2/mavros/scripts/in
     && chmod +x /tmp/install_geographiclib_datasets.sh \
     && sudo /tmp/install_geographiclib_datasets.sh
 
-RUN echo "source ${USER_WORKSPACE}/install/setup.bash" >> /home/$USERNAME/.bashrc \
-    && echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /home/$USERNAME/.bashrc
+RUN echo "if [ -f ${USER_WORKSPACE}/install/setup.bash ]; then source ${USER_WORKSPACE}/install/setup.bash; fi" >> /home/$USERNAME/.bashrc
 
 FROM robot as desktop
 
