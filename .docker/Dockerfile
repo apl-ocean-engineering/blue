@@ -54,16 +54,6 @@ RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# This is ... a very bad way to solve this ...
-# but it appears to be the most effective way to make colcon play
-# nice with venvs
-#
-# Changes the first line of /usr/bin/colcon to use
-# the python3 binary in the venv (if activated)
-#
-# #!/usr/bin/python3  --> #!/usr/bin/env python3
-RUN sed -i '1s/python3/env python3/' /usr/bin/colcon
-
 # Switch to the non-root user for the rest of the installation
 USER $USERNAME
 ENV USER=$USERNAME
@@ -82,6 +72,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # ROS must be activated before the venv (?)
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /home/$USERNAME/.bashrc
 RUN echo "source /home/$USERNAME/.venv/blue/bin/activate" >> /home/$USERNAME/.bashrc
+RUN echo "\n# Ensure colcon is run in the venv\nalias colcon='python3 -m colcon'" >> /home/$USERNAME/.bashrc
 
 ENV USER_WORKSPACE=/home/$USERNAME/ws_blue
 WORKDIR $USER_WORKSPACE
