@@ -74,7 +74,7 @@ jobs:
           set: |
             *.platform=linux/amd64
         env:
-          BLUE_ROS_DISTRO: matrix.ROS_DISTRO
+          BLUE_ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
           BLUE_GITHUB_REPO: ${{ github.repository }}
 
 
