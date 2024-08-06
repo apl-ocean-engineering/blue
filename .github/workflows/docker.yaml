@@ -75,8 +75,8 @@ jobs:
           push: ${{ env.PUSH }}
           set: |
             *.platform=linux/amd64
-            *.cache-from=gha,scope=${{ matrix.stage }}
-            *.cache-to=gha,mode=max,scope=${{ matrix.stage }}
+            *.cache-from=type=gha,scope=${{ matrix.stage }}
+            *.cache-to=type=gha,mode=max,scope=${{ matrix.stage }}
             *.tags=${{ steps.meta.outputs.tags }}
             *.labels=${{ steps.meta.outputs.labels }}
 
@@ -90,7 +90,7 @@ jobs:
             ${{ matrix.stage }}
           set: |
             *.platform=linux/amd64
-            *.cache-from=gha,scope=${{ matrix.stage }}
+            *.cache-from=type=gha,scope=${{ matrix.stage }}
             *.cache-to=
 
 
