@@ -21,12 +21,10 @@ jobs:
   docker_build:
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         ROS_DISTRO: [rolling]
         stage: [ci, robot, desktop, desktop-nvidia]
-    concurrency:
-      group: docker_build
-      cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
       packages: write
