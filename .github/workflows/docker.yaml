@@ -24,6 +24,9 @@ jobs:
       matrix:
         ROS_DISTRO: [rolling]
         stage: [ci, robot, desktop, desktop-nvidia]
+    concurrency:
+      group: docker_build
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -75,7 +78,10 @@ jobs:
           push: ${{ env.PUSH }}
           set: |
             *.platform=linux/amd64
-            *.cache-from=type=gha,scope=${{ matrix.stage }}
+            *.cache-from=type=gha,scope=ci
+            *.cache-from=type=gha,scope=robot
+            *.cache-from=type=gha,scope=desktop
+            *.cache-from=type=gha,scope=desktop-nvidia
             *.cache-to=type=gha,mode=max,scope=${{ matrix.stage }}
             *.tags=${{ steps.meta.outputs.tags }}
             *.labels=${{ steps.meta.outputs.labels }}
@@ -90,7 +96,10 @@ jobs:
             ${{ matrix.stage }}
           set: |
             *.platform=linux/amd64
-            *.cache-from=type=gha,scope=${{ matrix.stage }}
+            *.cache-from=type=gha,scope=ci
+            *.cache-from=type=gha,scope=robot
+            *.cache-from=type=gha,scope=desktop
+            *.cache-from=type=gha,scope=desktop-nvidia
             *.cache-to=
 
 
