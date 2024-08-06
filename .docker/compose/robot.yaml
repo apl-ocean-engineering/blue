@@ -1,10 +1,6 @@
 services:
   blue:
-    image: ghcr.io/robotic-decision-making-lab/blue:rolling-robot
-    build:
-      dockerfile: .docker/Dockerfile
-      target: robot
-      context: ../../
+    image: ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-robot
     network_mode: host
     privileged: true
     cap_add:

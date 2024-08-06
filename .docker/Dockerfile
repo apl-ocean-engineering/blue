@@ -18,6 +18,7 @@ RUN apt-get -q update \
     clang-tools \
     python3-pip \
     python3-dev \
+    python3-venv \
     lsb-release \
     wget \
     gnupg \
@@ -47,14 +48,14 @@ RUN apt-get -q update \
 #
 FROM ci AS robot
 
-# Configure a new non-root user
-ARG USERNAME=blue
+#
+# Ubuntu 24.04 "Noble", which is used as the base image for
+# jazzy and rolling images, now includes a user "ubuntu" at UID 1000
+ARG USERNAME=ubuntu
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && usermod -a -G dialout $USERNAME \
     && echo "source /usr/share/bash-completion/completions/git" >> /home/$USERNAME/.bashrc
@@ -64,6 +65,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Switch to the non-root user for the rest of the installation
 USER $USERNAME
 ENV USER=$USERNAME
+
+# Python in Ubuntu is now marked as a "Externally managed environment",
+# Per best practice, create a venv for local python packages
+#
+# These two ENVs effectively "activate" the venv for subsequent calls to
+# python/pip in the Dockerfile
+WORKDIR /home/$USERNAME
+ENV VIRTUAL_ENV=/home/$USERNAME/.venv/blue
+RUN python3 -m venv --system-site-packages --symlinks $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install MAVROS dependencies
 WORKDIR /home/$USERNAME
@@ -112,43 +123,53 @@ RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
     && colcon build
 
 RUN echo "source ${USER_WORKSPACE}/install/setup.bash" >> /home/$USERNAME/.bashrc \
-    && echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /home/$USERNAME/.bashrc
+    && echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /home/$USERNAME/.bashrc \
+    && echo "\n# Ensure colcon is run in the venv\nalias colcon='python3 -m colcon'" >> /home/$USERNAME/.bashrc
 
 FROM robot AS desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV GZ_VERSION=garden
+ENV GZ_VERSION=harmonic
 
-# Install Gazebo Garden: https://gazebosim.org/docs/garden/install_ubuntu
-RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
-    && sudo apt-get -q update \
-    && sudo apt-get -y --quiet --no-install-recommends install \
-    gz-garden \
-    && sudo apt-get autoremove -y \
-    && sudo apt-get clean -y \
-    && sudo rm -rf /var/lib/apt/lists/*
+# Install Gazebo Harmonic: https://gazebosim.org/docs/harmonic/install_ubuntu
+USER root
+# Install custom rosdep list
+ADD --chown=root:root --chmod=0644 https://raw.githubusercontent.com/osrf/osrf-rosdep/master/gz/00-gazebo.list /etc/ros/rosdep/sources.list.d/00-gazebo.list
+RUN wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" |  tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
+    && apt-get -q update \
+    && apt-get -y --quiet --no-install-recommends install \
+    gz-${GZ_VERSION} \
+    && apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install ArduPilot and ardupilot_gazebo dependencies
-RUN sudo apt-get -q update \
-    && sudo apt-get -q -y upgrade \
-    && sudo apt-get -q install --no-install-recommends -y \
+RUN apt-get -q update \
+    && apt-get -q -y upgrade \
+    && apt-get -q install --no-install-recommends -y \
+    python3-pexpect \
     python3-wxgtk4.0 \
+    python3-future \
     rapidjson-dev \
     xterm \
-    libgz-sim7-dev \
     rapidjson-dev \
     libopencv-dev \
-    && sudo apt-get autoremove -y \
-    && sudo apt-get clean -y \
-    && sudo rm -rf /var/lib/apt/lists/*
+    cppzmq-dev \
+    && apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
+USER $USERNAME
 
 # Clone ArduSub
 # ArduSub is installed for simulation purposes ONLY
 # When deployed onto hardware, the native installation of ArduSub
 # (on the FCU) will be used.
 WORKDIR /home/$USERNAME
-RUN git clone https://github.com/ArduPilot/ardupilot.git --recurse-submodules
+# Really should do version pinning but Sub-4.5 is waaaay behind master
+# (e.g. it doesn't know about "noble" yet)
+ARG ARDUPILOT_RELEASE=master
+RUN git clone -b ${ARDUPILOT_RELEASE} https://github.com/ArduPilot/ardupilot.git --recurse-submodules
 
 # Install ArduSub dependencies
 WORKDIR /home/$USERNAME/ardupilot
