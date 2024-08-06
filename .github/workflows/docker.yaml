@@ -90,7 +90,7 @@ jobs:
             ${{ github.job }}
           set: |
             *.platform=linux/amd64
-            *.cache-from=gha,${{ matrix.stage }}
+            *.cache-from=gha,scope=${{ matrix.stage }}
             *.cache-to=
 
 
