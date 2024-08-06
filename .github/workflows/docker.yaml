@@ -71,12 +71,15 @@ jobs:
         with:
           workdir: .docker
           targets: |
-            ${{ github.job }}
+            ${{ matrix.stage }}
           push: ${{ env.PUSH }}
           set: |
             *.platform=linux/amd64
             *.cache-from=gha,scope=${{ matrix.stage }}
             *.cache-to=gha,mode=max,scope=${{ matrix.stage }}
+            *.tags=${{ steps.meta.outputs.tags }}
+            *.labels=${{ steps.meta.outputs.labels }}
+
 
       - if: github.event_name == 'pull_request'
         name: Build and push (PR)
@@ -84,7 +87,7 @@ jobs:
         with:
           workdir: .docker
           targets: |
-            ${{ github.job }}
+            ${{ matrix.stage }}
           set: |
             *.platform=linux/amd64
             *.cache-from=gha,scope=${{ matrix.stage }}
