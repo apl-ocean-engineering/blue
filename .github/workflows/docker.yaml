@@ -21,10 +21,8 @@ jobs:
   docker_build:
     strategy:
       fail-fast: false
-      max-parallel: 1
       matrix:
         ROS_DISTRO: [rolling]
-        stage: [ci, robot, desktop, desktop-nvidia]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -56,23 +54,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      -
-        name: Extract Docker metadata
-        if: env.PUSH == 'true'
-        id: meta
-        uses: docker/metadata-action@v5.5.1
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=${{ matrix.ROS_DISTRO }}-${{ matrix.stage }}
+      # -
+      #   name: Extract Docker metadata
+      #   if: env.PUSH == 'true'
+      #   id: meta
+      #   uses: docker/metadata-action@v5.5.1
+      #   with:
+      #     images: ghcr.io/${{ github.repository }}
+      #     tags: |
+      #       type=raw,value=${{ matrix.ROS_DISTRO }}-${{ matrix.stage }}
 
       - if: github.event_name == 'push'
         name: Build and push (non PR)
         uses: docker/bake-action@v5.5.0
         with:
           workdir: .docker
-          targets: |
-            ${{ matrix.stage }}
           push: ${{ env.PUSH }}
           set: |
             *.platform=linux/amd64
@@ -80,10 +76,10 @@ jobs:
             *.cache-from=type=gha,scope=robot
             *.cache-from=type=gha,scope=desktop
             *.cache-from=type=gha,scope=desktop-nvidia
-            *.cache-to=type=gha,mode=max,scope=${{ matrix.stage }}
-            *.tags=${{ steps.meta.outputs.tags }}
-            *.labels=${{ steps.meta.outputs.labels }}
-
+            ci.cache-to=type=gha,mode=max,scope=ci
+            robot.cache-to=type=gha,mode=max,scope=robot
+            desktop.cache-to=type=gha,mode=max,scope=desktop
+            desktop-nvidia.cache-to=type=gha,mode=max,scope=desktop-nvidia
 
       - if: github.event_name == 'pull_request'
         name: Build and push (PR)
