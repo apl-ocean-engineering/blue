@@ -65,17 +65,16 @@ jobs:
         name: Build and push
         uses: docker/bake-action@v5.5.0
         with:
-          context: .
+          source: .
           files: .docker/docker-compose.yaml
-          target: ${{ github.job }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          targets: |
+            ${{ github.job }}
           push: ${{ env.PUSH }}
           set: |
             *.platform=linux/amd64
         env:
           BLUE_ROS_DISTRO: matrix.ROS_DISTRO
-          BLUE_BLUE_GITHUB_REPO: ${{ github.repository }}
+          BLUE_GITHUB_REPO: ${{ github.repository }}
 
 
 
