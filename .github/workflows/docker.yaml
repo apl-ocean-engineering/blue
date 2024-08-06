@@ -68,7 +68,7 @@ jobs:
       - if: github.event_name == 'push'
         name: Build and push (non PR)
         uses: docker/bake-action@v5.5.0
-        with:
+        with: &build_with
           workdir: .docker
           targets: |
             ${{ github.job }}
@@ -77,17 +77,12 @@ jobs:
             *.platform=linux/amd64
             *.cache-from=gha,scope=${{ matrix.stage }}
             *.cache-to=gha,mode=max,scope=${{ matrix.stage }}
-        env:
-          BLUE_ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
-          BLUE_GITHUB_REPO: ${{ github.repository }}
 
       - if: github.event_name == 'pull_request'
-        name: Build and push (non PR)
+        name: Build and push (PR)
         uses: docker/bake-action@v5.5.0
         with:
-          workdir: .docker
-          targets: |
-            ${{ github.job }}
+          <<: *build_with
           set: |
             *.platform=linux/amd64
             *.cache-from=gha,scope=${{ matrix.stage }}
