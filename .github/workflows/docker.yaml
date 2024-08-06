@@ -63,7 +63,7 @@ jobs:
 
       -
         name: Build and push
-        uses: docker/bake-actionn@v5
+        uses: docker/bake-action@v5.5.0
         with:
           context: .
           files: .docker/docker-compose.yaml
