@@ -1,0 +1,35 @@
+# The following variables are loaded from the .env file
+#   BLUE_BLUE_GITHUB_REPO
+#   BLUE_ROS_DISTRO
+#
+# These targets are exclusively for building respective images.  See compose/ for running images.
+
+services:
+  robot:
+    image: ghcr.io/${BLUE_GITHUB_REPO:?Github repo not set}:${BLUE_ROS_DISTRO:?BLUE_ROS_DISTRO not set}-robot
+    build: &default_build
+      dockerfile: .docker/Dockerfile
+      target: robot
+      context: ../
+      args:
+        - ROS_DISTRO=${BLUE_ROS_DISTRO}
+      cache_from:
+        - ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-cache
+      cache_to:
+        - ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-cache
+      x-bake:
+        platforms:
+          - linux/amd64
+  #          - linux/arm64
+
+  desktop:
+    build:
+      <<: *default_build
+      target: desktop
+    image: ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-desktop
+
+  desktop-nvidia:
+    build:
+      <<: *default_build
+      target: desktop-nvidia
+    image: ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-desktop-nvidia

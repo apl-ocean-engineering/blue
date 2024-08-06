@@ -28,57 +28,22 @@ jobs:
       packages: write
       contents: read
     steps:
-      - name: Checkout repository
+      -
+        name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log into registry
-        if: env.PUSH == 'true'
-        uses: docker/login-action@v3.3.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      -
+        # Add support for more platforms with QEMU (optional)
+        # https://github.com/docker/setup-qemu-action
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Extract Docker metadata
-        if: env.PUSH == 'true'
-        id: meta
-        uses: docker/metadata-action@v5.5.1
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=${{ matrix.ROS_DISTRO }}-${{ github.job }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6.5.0
-        with:
-          context: .
-          file: .docker/Dockerfile
-          build-args: ROS_DISTRO=${{ matrix.ROS_DISTRO }}
-          target: ${{ github.job }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          push: ${{ env.PUSH }}
-
-  robot:
-    strategy:
-      fail-fast: false
-      matrix:
-        ROS_DISTRO: [rolling]
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.2.0
-
-      - name: Set up Docker Buildx
+      -
+        name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log into registry
+      -
+        name: Log into registry
         if: env.PUSH == 'true'
         uses: docker/login-action@v3.3.0
         with:
@@ -86,7 +51,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata
+      -
+        name: Extract Docker metadata
         if: env.PUSH == 'true'
         id: meta
         uses: docker/metadata-action@v5.5.1
@@ -95,96 +61,150 @@ jobs:
           tags: |
             type=raw,value=${{ matrix.ROS_DISTRO }}-${{ github.job }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6.5.0
+      -
+        name: Build and push
+        uses: docker/bake-actionn@v5
         with:
           context: .
-          file: .docker/Dockerfile
-          build-args: ROS_DISTRO=${{ matrix.ROS_DISTRO }}
+          files: .docker/docker-compose.yaml
           target: ${{ github.job }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: ${{ env.PUSH }}
-          platforms: linux/amd64,linux/arm64
+          set:
+            - "*.platform=linux/amd64"
+        env:
+          BLUE_ROS_DISTRO: matrix.ROS_DISTRO
+          BLUE_BLUE_GITHUB_REPO: ${{ github.repository }}
 
-  desktop:
-    strategy:
-      fail-fast: false
-      matrix:
-        ROS_DISTRO: [rolling]
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
-      - name: Log into registry
-        if: env.PUSH == 'true'
-        uses: docker/login-action@v3.3.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata
-        if: env.PUSH == 'true'
-        id: meta
-        uses: docker/metadata-action@v5.5.1
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=${{ matrix.ROS_DISTRO }}-${{ github.job }}
+  # robot:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       ROS_DISTRO: [rolling]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     packages: write
+  #     contents: read
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6.5.0
-        with:
-          context: .
-          file: .docker/Dockerfile
-          build-args: ROS_DISTRO=${{ matrix.ROS_DISTRO }}
-          target: ${{ github.job }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          push: ${{ env.PUSH }}
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v3.2.0
 
-  desktop-nvidia:
-    strategy:
-      fail-fast: false
-      matrix:
-        ROS_DISTRO: [rolling]
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
 
-      - name: Log into registry
-        if: env.PUSH == 'true'
-        uses: docker/login-action@v3.3.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Log into registry
+  #       if: env.PUSH == 'true'
+  #       uses: docker/login-action@v3.3.0
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata
-        if: env.PUSH == 'true'
-        id: meta
-        uses: docker/metadata-action@v5.5.1
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=${{ matrix.ROS_DISTRO }}-${{ github.job }}
+  #     - name: Extract Docker metadata
+  #       if: env.PUSH == 'true'
+  #       id: meta
+  #       uses: docker/metadata-action@v5.5.1
+  #       with:
+  #         images: ghcr.io/${{ github.repository }}
+  #         tags: |
+  #           type=raw,value=${{ matrix.ROS_DISTRO }}-${{ github.job }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6.5.0
-        with:
-          context: .
-          file: .docker/Dockerfile
-          build-args: ROS_DISTRO=${{ matrix.ROS_DISTRO }}
-          target: ${{ github.job }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          push: ${{ env.PUSH }}
+  #     - name: Build and push Docker image
+  #       uses: docker/build-push-action@v6.5.0
+  #       with:
+  #         context: .
+  #         file: .docker/Dockerfile
+  #         build-args: ROS_DISTRO=${{ matrix.ROS_DISTRO }}
+  #         target: ${{ github.job }}
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+  #         push: ${{ env.PUSH }}
+  #         platforms: linux/amd64,linux/arm64
+
+  # desktop:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       ROS_DISTRO: [rolling]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     packages: write
+  #     contents: read
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Log into registry
+  #       if: env.PUSH == 'true'
+  #       uses: docker/login-action@v3.3.0
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+
+  #     - name: Extract Docker metadata
+  #       if: env.PUSH == 'true'
+  #       id: meta
+  #       uses: docker/metadata-action@v5.5.1
+  #       with:
+  #         images: ghcr.io/${{ github.repository }}
+  #         tags: |
+  #           type=raw,value=${{ matrix.ROS_DISTRO }}-${{ github.job }}
+
+  #     - name: Build and push Docker image
+  #       uses: docker/build-push-action@v6.5.0
+  #       with:
+  #         context: .
+  #         file: .docker/Dockerfile
+  #         build-args: ROS_DISTRO=${{ matrix.ROS_DISTRO }}
+  #         target: ${{ github.job }}
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+  #         push: ${{ env.PUSH }}
+
+  # desktop-nvidia:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       ROS_DISTRO: [rolling]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     packages: write
+  #     contents: read
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Log into registry
+  #       if: env.PUSH == 'true'
+  #       uses: docker/login-action@v3.3.0
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+
+  #     - name: Extract Docker metadata
+  #       if: env.PUSH == 'true'
+  #       id: meta
+  #       uses: docker/metadata-action@v5.5.1
+  #       with:
+  #         images: ghcr.io/${{ github.repository }}
+  #         tags: |
+  #           type=raw,value=${{ matrix.ROS_DISTRO }}-${{ github.job }}
+
+  #     - name: Build and push Docker image
+  #       uses: docker/build-push-action@v6.5.0
+  #       with:
+  #         context: .
+  #         file: .docker/Dockerfile
+  #         build-args: ROS_DISTRO=${{ matrix.ROS_DISTRO }}
+  #         target: ${{ github.job }}
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+  #         push: ${{ env.PUSH }}
