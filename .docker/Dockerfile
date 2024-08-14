@@ -74,7 +74,7 @@ USER $USERNAME
 
 # Build Mavros workspace
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
-    && colcon build \
+    && colcon build --event-handlers console_cohesion+ --cmake-args -DCMAKE_VERBOSE_MAKEFILE=ON \
     && rm -rf $MAVROS_WORKSPACE/build
 
 # == "Standard" Blue Docker image proceeds from here
