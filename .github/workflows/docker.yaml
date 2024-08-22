@@ -24,7 +24,6 @@ jobs:
       fail-fast: false
       matrix:
         ROS_DISTRO: [rolling]
-        stage: ["ci", "robot", "desktop", "desktop-nvidia"]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -73,18 +72,48 @@ jobs:
       -
         name: Extract Docker metadata
         if: env.PUSH == 'true'
-        id: meta
+        id: meta-ci
         uses: docker/metadata-action@v5.5.1
         with:
           images: ghcr.io/${{ github.repository }}
+          bake-target: docker-metadata-action-ci
           tags: |
-            type=raw,value=${{ matrix.ROS_DISTRO }}-${{ matrix.stage }}
+            type=raw,value=${{ matrix.ROS_DISTRO }}-ci
 
-      - id: print-metadata
-        name: Print Docker metadata
-        run: |
-          echo ${{ steps.meta.outputs.bake-file }}
-          cat ${{ steps.meta.outputs.bake-file }}
+      -
+        name: Extract Docker metadata
+        if: env.PUSH == 'true'
+        id: meta-robot
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ghcr.io/${{ github.repository }}
+          bake-target: docker-metadata-action-robot
+          tags: |
+            type=raw,value=${{ matrix.ROS_DISTRO }}-robot
+
+      -
+        name: Extract Docker metadata
+        if: env.PUSH == 'true'
+        id: meta-desktop
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ghcr.io/${{ github.repository }}
+          bake-target: docker-metadata-action-desktop
+          tags: |
+            type=raw,value=${{ matrix.ROS_DISTRO }}-desktop
+
+      -
+        name: Extract Docker metadata
+        if: env.PUSH == 'true'
+        id: meta-desktop-nvidia
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ghcr.io/${{ github.repository }}
+          bake-target: docker-metadata-action-desktop-nvidia
+          tags: |
+            type=raw,value=${{ matrix.ROS_DISTRO }}-desktop-nvidia
+
+
 
       - if: github.event_name == 'push'
         name: Build and push (non PR)
@@ -96,16 +125,21 @@ jobs:
           workdir: .docker
           files: |
             ./docker-bake.hcl
-            ${{ steps.meta.outputs.bake-file }}
-          targets: |
-            ${{ matrix.stage }}
+            ${{ steps.meta-ci.outputs.bake-file }}
+            ${{ steps.meta-robot.outputs.bake-file }}
+            ${{ steps.meta-desktop.outputs.bake-file }}
+            ${{ steps.meta-desktop-nvidia.outputs.bake-file }}
           push: ${{ env.PUSH }}
           set: |
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-ci
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-robot"
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-desktop
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-desktop-nvidia
-            ${{ matrix.stage }}.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-${{ matrix.stage }}
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-ci
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-robot
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop-nvidia
+            ci.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-ci
+            robot.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-robot
+            desktop.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop
+            desktop-nvidia.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop-nvidia
+
 
       # Pull request builds are not cached; and only built for AMD64
       - if: github.event_name == 'pull_request'
@@ -118,14 +152,15 @@ jobs:
           workdir: .docker
           files: |
             ./docker-bake.hcl
-          targets: |
-            ${{ matrix.stage }}
+            ${{ steps.meta-ci.outputs.bake-file }}
+            ${{ steps.meta-robot.outputs.bake-file }}
+            ${{ steps.meta-desktop.outputs.bake-file }}
+            ${{ steps.meta-desktop-nvidia.outputs.bake-file }}
           set: |
             *.platform=linux/amd64
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-ci
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-robot
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-desktop
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-desktop-nvidia
-             ${{ matrix.stage }}.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-${{ matrix.stage }}
-
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-ci
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-robot
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop-nvidia
+            *.cache-to=
 #            ${{ steps.meta.outputs.bake-file }}

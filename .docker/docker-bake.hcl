@@ -17,7 +17,11 @@ group "default" {
 }
 
 # In Github CI, populated by metadata-action Github action
-target "docker-metadata-action" {}
+target "docker-metadata-action-ci" {}
+target "docker-metadata-action-robot" {}
+target "docker-metadata-action-desktop" {}
+target "docker-metadata-action-desktop-nvidia" {}
+
 
 #
 # All images can pull cache from the images published at Github
@@ -26,7 +30,7 @@ target "docker-metadata-action" {}
 # ... and push cache to local storage
 #
 target "ci" {
-  inherits = ["docker-metadata-action"]
+  inherits = ["docker-metadata-action-ci"]
   dockerfile = ".docker/Dockerfile"
   target = "ci"
   context = ".."
@@ -53,7 +57,7 @@ target "ci" {
 }
 
 target "robot" {
-  inherits = [ "ci" ]
+  inherits = [ "ci", "docker-metadata-action-robot" ]
   target = "robot"
   tags = [
     "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-robot"
@@ -64,7 +68,7 @@ target "robot" {
 }
 
 target "desktop" {
-  inherits = [ "ci" ]
+  inherits = [ "ci", "docker-metadata-action-desktop" ]
   target = "desktop"
   tags = [
     "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-desktop"
@@ -77,7 +81,7 @@ target "desktop" {
 }
 
 target "desktop-nvidia" {
-  inherits = [ "desktop" ]
+  inherits = [ "desktop", "docker-metadata-action-desktop-nvidia" ]
   target = "desktop-nvidia"
   tags = [
     "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-desktop-nvidia"
