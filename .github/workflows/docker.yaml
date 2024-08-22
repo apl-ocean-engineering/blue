@@ -29,9 +29,9 @@ jobs:
       packages: write
       contents: read
     steps:
-      # -
-      #   name: Checkout
-      #   uses: actions/checkout@v4
+      -
+        name: Checkout
+        uses: actions/checkout@v4
 
       -
         # Add support for more platforms with QEMU (optional)
@@ -113,7 +113,7 @@ jobs:
           BLUE_ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
           BLUE_GITHUB_REPO: ${{ steps.lower-repo.outputs.repository }}
         with:
-          source: "${{ github.server_url }}/${{ github.repository }}.git#${{ github.ref }}:.docker"
+          workdir: .docker
           files: |
             ./docker-bake.hcl
             ${{ steps.meta-ci.outputs.bake-file }}
@@ -133,7 +133,7 @@ jobs:
           BLUE_ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
           BLUE_GITHUB_REPO: ${{ steps.lower-repo.outputs.repository }}
         with:
-          source: "${{ github.server_url }}/${{ github.repository }}.git#${{ github.ref }}:.docker"
+          workdir: .docker
           files: |
             ./docker-bake.hcl
           set: |
