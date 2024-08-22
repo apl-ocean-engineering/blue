@@ -100,7 +100,7 @@ jobs:
             ${{ matrix.stage }}
           push: ${{ env.PUSH }}
           set: |
-            *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-ci"
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-ci
             *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-robot"
             *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-desktop"
             *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-desktop-nvidia"
@@ -121,7 +121,7 @@ jobs:
             ${{ matrix.stage }}
           set: |
             *.platform=linux/amd64
-            *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-ci"
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-ci
             *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-robot"
             *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-desktop"
             *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-desktop-nvidia"
