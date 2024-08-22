@@ -55,12 +55,12 @@ jobs:
 
       # buildx bake, unfortunately, requires lower-cased repository names
       # This shell ... er, hack, creates a local variable containing
-      # a down-cased version of $GITHUB_REPOSITORY
+      # a down-cased version of $github.repository
       #
       - id: lower-repo
         name: Repository to lowercase
         run: |
-          echo "repository=${GITHUB_REPOSITORY@L}" >> $GITHUB_OUTPUT
+          echo "repository=${github.repository@L}" >> $GITHUB_OUTPUT
 
       # tbd:  not sure how to update this for buildx
       #
@@ -100,11 +100,11 @@ jobs:
             ${{ matrix.stage }}
           push: ${{ env.PUSH }}
           set: |
-            *.cache-from=type=registry,ref="ghcr.io/${{ GITHUB_REPOSITORY }}:ci-${{ matrix.ROS_DISTRO }}-ci"
-            *.cache-from=type=registry,ref="ghcr.io/${{ GITHUB_REPOSITORY }}:ci-${{ matrix.ROS_DISTRO }}-robot"
-            *.cache-from=type=registry,ref="ghcr.io/${{ GITHUB_REPOSITORY }}:ci-${{} matrix.ROS_DISTRO }}-desktop"
-            *.cache-from=type=registry,ref="ghcr.io/${{ GITHUB_REPOSITORY }}:ci-${{} matrix.ROS_DISTRO }}-desktop-nvidia"
-            ${{ matrix.stage }}.cache-to=type=registry,mode=max,ref="ghcr.io/${{ GITHUB_REPOSITORY }}:ci-${{ matrix.ROS_DISTRO }}-${{ matrix.stage }}"
+            *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-ci"
+            *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-robot"
+            *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{} matrix.ROS_DISTRO }}-desktop"
+            *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{} matrix.ROS_DISTRO }}-desktop-nvidia"
+            ${{ matrix.stage }}.cache-to=type=registry,mode=max,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-${{ matrix.stage }}"
 
       # Pull request builds are not cached; and only built for AMD64
       - if: github.event_name == 'pull_request'
@@ -121,10 +121,10 @@ jobs:
             ${{ matrix.stage }}
           set: |
             *.platform=linux/amd64
-            *.cache-from=type=registry,ref="ghcr.io/${{ GITHUB_REPOSITORY }}:ci-${{ matrix.ROS_DISTRO }}-ci"
-            *.cache-from=type=registry,ref="ghcr.io/${{ GITHUB_REPOSITORY }}:ci-${{ matrix.ROS_DISTRO }}-robot"
-            *.cache-from=type=registry,ref="ghcr.io/${{ GITHUB_REPOSITORY }}:ci-${{} matrix.ROS_DISTRO }}-desktop"
-            *.cache-from=type=registry,ref="ghcr.io/${{ GITHUB_REPOSITORY }}:ci-${{} matrix.ROS_DISTRO }}-desktop-nvidia"
-             ${{ matrix.stage }}.cache-to=type=registry,mode=max,ref="ghcr.io/${{ GITHUB_REPOSITORY }}:ci-${{ matrix.ROS_DISTRO }}-${{ matrix.stage }}",
+            *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-ci"
+            *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-robot"
+            *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{} matrix.ROS_DISTRO }}-desktop"
+            *.cache-from=type=registry,ref="ghcr.io/${{ github.repository }}:ci-${{} matrix.ROS_DISTRO }}-desktop-nvidia"
+             ${{ matrix.stage }}.cache-to=type=registry,mode=max,ref="ghcr.io/${{ github.repository }}:ci-${{ matrix.ROS_DISTRO }}-${{ matrix.stage }}",
 
 #            ${{ steps.meta.outputs.bake-file }}
