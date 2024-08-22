@@ -16,7 +16,9 @@ group "default" {
   targets = ["ci", "robot", "desktop", "desktop-nvidia"]
 }
 
-# In Github CI, populated by metadata-action Github action
+# These are populated by the metadata-action Github action for each target
+# when building in CI
+#
 target "docker-metadata-action-ci" {}
 target "docker-metadata-action-robot" {}
 target "docker-metadata-action-desktop" {}
@@ -44,10 +46,10 @@ target "ci" {
     "org.opencontainers.image.source" = "https://github.com/${BLUE_GITHUB_REPO}"
   }
   cache_from =[
-    "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-ci",
-    "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-robot",
-    "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-desktop",
-    "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-desktop-nvidia",
+    "ghcr.io/${BLUE_GITHUB_REPO}:cache-${BLUE_ROS_DISTRO}-ci",
+    "ghcr.io/${BLUE_GITHUB_REPO}:cache-${BLUE_ROS_DISTRO}-robot",
+    "ghcr.io/${BLUE_GITHUB_REPO}:cache-${BLUE_ROS_DISTRO}-desktop",
+    "ghcr.io/${BLUE_GITHUB_REPO}:cache-${BLUE_ROS_DISTRO}-desktop-nvidia",
     "type=local,dest=.docker-cache"
   ]
   cache_to = [
