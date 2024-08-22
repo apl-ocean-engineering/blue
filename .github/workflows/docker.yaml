@@ -122,14 +122,8 @@ jobs:
             ${{ steps.meta-desktop-nvidia.outputs.bake-file }}
           push: ${{ env.PUSH }}
           set: |
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-ci
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-robot
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop-nvidia
-            ci.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-ci
-            robot.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-robot
-            desktop.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop
-            desktop-nvidia.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop-nvidia
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}
+            *.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}
 
       # Pull request builds are not cached; and only built for AMD64
       - if: github.event_name == 'pull_request'
@@ -144,12 +138,6 @@ jobs:
             ./docker-bake.hcl
           set: |
             *.platform=linux/amd64
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-ci
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-robot
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop
-            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop-nvidia
-            ci.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-ci
-            robot.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-robot
-            desktop.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop
-            desktop-nvidia.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}-desktop-nvidia
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}
+            *.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}
 #            *.cache-to=
