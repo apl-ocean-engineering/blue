@@ -109,7 +109,6 @@ jobs:
           source: "{{defaultContext}}:.docker"
           files: |
             ./docker-bake.hcl
-            ${{ steps.meta.outputs.bake-file }}
           targets: |
             ${{ matrix.stage }}
           set: |
@@ -119,3 +118,5 @@ jobs:
             *.cache-from=type=registry,ref="ghcr.io/${GITHUB_REPOSITORY}:ci-${ matrix.ROS_DISTRO }-desktop",
             *.cache-from=type=registry,ref="ghcr.io/${GITHUB_REPOSITORY}:ci-${ matrix.ROS_DISTRO }-desktop-nvidia",
             ${{ matrix.stage }}.cache-to=type=registry,mode=max,ref="ghcr.io/${GITHUB_REPOSITORY}:ci-${ matrix.ROS_DISTRO }-${ matrix.stage }",
+
+#            ${{ steps.meta.outputs.bake-file }}
