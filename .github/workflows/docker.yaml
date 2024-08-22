@@ -55,12 +55,12 @@ jobs:
 
       # buildx bake, unfortunately, requires lower-cased repository names
       # This shell ... er, hack, creates a local variable containing
-      # a down-cased version of $github.repository
+      # a down-cased version of $GITHUB_REPOSITORY
       #
       - id: lower-repo
         name: Repository to lowercase
         run: |
-          echo "repository=${github.repository@L}" >> $GITHUB_OUTPUT
+          echo "repository=${GITHUB_REPOSITORY@L}" >> $GITHUB_OUTPUT
 
       # tbd:  not sure how to update this for buildx
       #
