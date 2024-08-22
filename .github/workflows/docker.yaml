@@ -84,8 +84,7 @@ jobs:
           BLUE_ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
           BLUE_GITHUB_REPO: ${{ steps.lower-repo.outputs.repository }}
         with:
-          source: "${{ github.server_url }}/${{ github.repository }}.git#${{ github.ref }}"
-          workdir: .docker
+          source: "{{defaultContext}}:.docker"
           files: |
             ./docker-bake.hcl
             ${{ steps.meta.outputs.bake-file }}
@@ -107,8 +106,7 @@ jobs:
           BLUE_ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
           BLUE_GITHUB_REPO: ${{ steps.lower-repo.outputs.repository }}
         with:
-          source: "${{ github.server_url }}/${{ github.repository }}.git#${{ github.ref }}"
-          workdir: .docker
+          source: "{{defaultContext}}:.docker"
           files: |
             ./docker-bake.hcl
             ${{ steps.meta.outputs.bake-file }}
