@@ -61,7 +61,7 @@ jobs:
         run: |
           echo "repository=${GITHUB_REPOSITORY@L}" >> $GITHUB_OUTPUT
 
-      # Set metadata for each stage-image independently
+      # Set metadata for each stage-image separately
       -
         name: Set Docker metadata for "ci"
         if: env.PUSH == 'true'
@@ -139,5 +139,4 @@ jobs:
           set: |
             *.platform=linux/amd64
             *.cache-from=type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}
-            *.cache-to=type=registry,mode=max,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.ROS_DISTRO }}
-#            *.cache-to=
+            *.cache-to=
