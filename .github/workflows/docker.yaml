@@ -77,6 +77,11 @@ jobs:
           tags: |
             type=raw,value=${{ matrix.ROS_DISTRO }}-${{ matrix.stage }}
 
+      - id: print-metadata
+        name: Print Docker metadata
+        run: |
+          cat ${{ steps.meta.outputs.bake-file }}
+
       - if: github.event_name == 'push'
         name: Build and push (non PR)
         uses: docker/bake-action@v5.5.0
