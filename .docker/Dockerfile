@@ -311,6 +311,40 @@ export GZ_SIM_RESOURCE_PATH=\$BLUE_DESCRIPTION/gazebo/models:\$BLUE_DESCRIPTION/
 export GZ_SIM_RESOURCE_PATH=\$BLUE_DESCRIPTION/meshes:\$GZ_SIM_RESOURCE_PATH
 EOT
 
+##
+##  Install mavlink router
+##
+USER root
+RUN apt-get -q update \
+    && apt-get -q -y upgrade \
+    && apt-get -y --quiet --no-install-recommends install \
+    git \
+    meson \
+    ninja-build \
+    pkg-config \
+    gcc \
+    g++ \
+    && sudo apt-get autoremove -y \
+    && sudo apt-get clean -y \
+    && sudo rm -rf /var/lib/apt/lists/*
+
+USER $USERNAME
+WORKDIR /home/$USERNAME
+RUN pip3 install --user future lxml \
+    && git clone --recursive https://github.com/intel/mavlink-router
+
+WORKDIR /home/$USERNAME/mavlink-router
+RUN meson setup build . -Dprefix=/usr/local \
+    && ninja -C build
+USER root
+RUN ninja -C build install
+USER $USERNAME
+
+WORKDIR /etc/mavlink-router
+COPY .docker/files/mavlink-router.conf /etc/mavlink-router/main.conf
+
+WORKDIR $USER_WORKSPACE
+
 FROM desktop AS desktop-nvidia
 
 # Install NVIDIA software
