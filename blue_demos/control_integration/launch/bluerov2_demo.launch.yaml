@@ -4,16 +4,22 @@ launch:
       name: use_sim
       default: "false"
 
+  - arg:
+      name: simple_sim_environment
+      default: "false"
+
   - let:
       name: description_file
       value: $(find-pkg-share blue_demos)/control_integration/description/urdf/bluerov2.config.xacro
 
   - let:
       name: robot_description
-      value: $(command 'xacro $(var description_file) use_sim:=$(var use_sim)')
+      value: $(command 'xacro $(var description_file) use_sim:=$(var use_sim) simple_sim_environment:=$(var simple_sim_environment)')
 
   - include:
       file: $(find-pkg-share blue_bringup)/launch/bluerov2/bluerov2.launch.yaml
       arg:
         - name: robot_description
           value: $(var robot_description)
+        - name: gazebo_world_file
+          value: $(find-pkg-share blue_description)/gazebo/worlds/underwater_simplified.world
