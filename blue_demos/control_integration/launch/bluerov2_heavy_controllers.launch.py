@@ -94,15 +94,15 @@ def generate_launch_description() -> LaunchDescription:
         ],
     )
 
-    velocity_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "integral_sliding_mode_controller",
-            "--controller-manager",
-            ["", "controller_manager"],
-        ],
-    )
+    # velocity_controller_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner",
+    #     arguments=[
+    #         "integral_sliding_mode_controller",
+    #         "--controller-manager",
+    #         ["", "controller_manager"],
+    #     ],
+    # )
 
     thruster_spawners = [
         Node(
@@ -152,14 +152,14 @@ def generate_launch_description() -> LaunchDescription:
         )
     )
 
-    delay_velocity_controller_spawner_after_tam_controller_spawner = (
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=tam_controller_spawner,
-                on_exit=[velocity_controller_spawner],
-            )
-        )
-    )
+    # delay_velocity_controller_spawner_after_tam_controller_spawner = (
+    #     RegisterEventHandler(
+    #         event_handler=OnProcessExit(
+    #             target_action=tam_controller_spawner,
+    #             on_exit=[velocity_controller_spawner],
+    #         )
+    #     )
+    # )
 
     return LaunchDescription(
         [
@@ -168,6 +168,6 @@ def generate_launch_description() -> LaunchDescription:
             controller_manager,
             *delay_thruster_spawners,
             delay_tam_controller_spawner_after_thruster_controller_spawners,
-            delay_velocity_controller_spawner_after_tam_controller_spawner,
+            # delay_velocity_controller_spawner_after_tam_controller_spawner,
         ]
     )

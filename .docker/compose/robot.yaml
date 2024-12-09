@@ -15,7 +15,5 @@ services:
     volumes:
       - /dev:/dev
       - /run/user/1000:/run/user/1000
-      - type: bind
-        source: ../../
-        target: /home/blue/ws_blue/src/blue
+      - ../../../../src:/home/ubuntu/ws_blue/src
     command: tail -f /dev/null

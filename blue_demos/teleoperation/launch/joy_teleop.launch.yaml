@@ -20,7 +20,7 @@ launch:
       exec: joy_teleop
       output: screen
       param:
-        - from: $(var joy_file)
+        - from: $(var joy_ros2 file)
 
   - include:
       file: $(find-pkg-share message_transforms)/launch/message_transforms.launch.py
