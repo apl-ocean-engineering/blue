@@ -252,6 +252,31 @@ FROM desktop_unbuilt AS desktop
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
     && colcon build
 
+# This repetition doesn't exactly sit right ... but I can't quite figure
+# out how to make this work without repeating either these instructions or
+# the colcon build
+FROM desktop_unbuilt AS desktop-nvidia_unbuilt
+
+# Install NVIDIA software
+RUN sudo apt-get update \
+    && sudo apt-get -q -y upgrade \
+    && sudo apt-get install -y -qq --no-install-recommends \
+    libglvnd0 \
+    libgl1 \
+    libglx0 \
+    libegl1 \
+    libxext6 \
+    libx11-6 \
+    && sudo apt-get autoremove -y \
+    && sudo apt-get clean -y \
+    && sudo rm -rf /var/lib/apt/lists/*
+
+# Env vars for the nvidia-container-runtime.
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+ENV QT_X11_NO_MITSHM=1
+
+
 FROM desktop AS desktop-nvidia
 
 # Install NVIDIA software

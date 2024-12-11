@@ -93,6 +93,16 @@ target "desktop" {
   ]
 }
 
+target "desktop-nvidia_unbuilt" {
+  inherits = [ "desktop", "docker-metadata-action-desktop-nvidia" ]
+  target = "desktop-nvidia_unbuilt"
+  tags = [
+    "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-desktop-nvidia-unbuilt"
+  ]
+
+}
+
+
 target "desktop-nvidia" {
   inherits = [ "desktop", "docker-metadata-action-desktop-nvidia" ]
   target = "desktop-nvidia"
