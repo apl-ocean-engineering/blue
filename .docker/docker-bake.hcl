@@ -58,28 +58,39 @@ target "ci" {
   platforms = ["linux/amd64", "linux/arm64"]
 }
 
+target "robot_unbuilt" {
+  inherits = [ "ci" ]
+  target = "robot_unbuilt"
+  tags = [
+    "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-robot-unbuilt"
+  ]
+
+}
+
 target "robot" {
-  inherits = [ "ci", "docker-metadata-action-robot" ]
+  inherits = [ "robot_unbuilt", "docker-metadata-action-robot" ]
   target = "robot"
   tags = [
     "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-robot"
   ]
-  cache_to = [
-    "type=local,dest=.docker-cache"
+}
+
+target "desktop_unbuilt" {
+  inherits = [ "ci" ]
+  target = "desktop"
+  tags = [
+    "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-desktop-unbuilt"
   ]
+  # amd64 only builds for desktop and desktop-nvidia
+  platforms = ["linux/amd64"]
 }
 
 target "desktop" {
-  inherits = [ "ci", "docker-metadata-action-desktop" ]
+  inherits = [ "desktop_unbuilt", "docker-metadata-action-desktop" ]
   target = "desktop"
   tags = [
     "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-desktop"
   ]
-  cache_to = [
-    "type=local,dest=.docker-cache"
-  ]
-  # amd64 only builds for desktop and desktop-nvidia
-  platforms = ["linux/amd64"]
 }
 
 target "desktop-nvidia" {
@@ -88,7 +99,5 @@ target "desktop-nvidia" {
   tags = [
     "ghcr.io/${BLUE_GITHUB_REPO}:${BLUE_ROS_DISTRO}-desktop-nvidia"
   ]
-  cache_to = [
-    "type=local,dest=.docker-cache"
-  ]
+
 }
