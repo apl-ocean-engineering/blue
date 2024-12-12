@@ -154,11 +154,11 @@ RUN echo "if [ -f ${USER_WORKSPACE}/install/setup.bash ]; then source ${USER_WOR
     && echo "source $VIRTUAL_ENV/bin/activate" >> /home/$USERNAME/.bashrc \
     && echo "\n# Ensure colcon is run in the venv\nalias colcon='python3 -m colcon'" >> /home/$USERNAME/.bashrc
 
-
 # Actually build workspace
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
     && colcon build
 
+FROM robot AS desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GZ_VERSION=harmonic
