@@ -46,7 +46,7 @@ def generate_launch_description() -> LaunchDescription:
         DeclareLaunchArgument(
             "localization_source",
             default_value="mocap",
-            choices=["mocap", "camera", "gazebo"],
+            choices=["mocap", "camera", "gazebo", "pnp"],
             description="The localization source to stream from.",
         ),
         DeclareLaunchArgument(
@@ -70,12 +70,18 @@ def generate_launch_description() -> LaunchDescription:
             default_value="false",
             description=("Use the simulated Gazebo clock."),
         ),
+        DeclareLaunchArgument(
+            "fiducial_map_url",
+            default_value=None,
+            description="The path to the map YAML file for PNP.",
+        ),
     ]
 
     localization_source = LaunchConfiguration("localization_source")
     use_camera = LaunchConfiguration("use_camera")
     use_mocap = LaunchConfiguration("use_mocap")
     use_sim_time = LaunchConfiguration("use_sim_time")
+    fiducial_map_url = LaunchConfiguration("fiducial_map_url")
 
     nodes = [
         Node(
@@ -157,6 +163,18 @@ def generate_launch_description() -> LaunchDescription:
             ],
             condition=IfCondition(
                 PythonExpression(["'", localization_source, "' == 'gazebo'"])
+            ),
+        ),
+        Node(
+            package="blue_localization",
+            executable="pnp_localizer",
+            name="pnp_localizer",
+            output="both",
+            parameters=[
+                {"fiducial_map_url": fiducial_map_url, "use_sim_time": use_sim_time},
+            ],
+            condition=IfCondition(
+                PythonExpression(["'", localization_source, "' == 'pnp'"])
             ),
         ),
     ]

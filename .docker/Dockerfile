@@ -106,6 +106,7 @@ RUN python3 -m pip install -r $(pwd)/src/blue/requirements-build.txt
 RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
     && sudo apt-get -q install --no-install-recommends -y \
+    nano \
     python3-gi \
     gstreamer1.0-tools \
     gir1.2-gstreamer-1.0 \
@@ -138,7 +139,8 @@ RUN echo "if [ -f ${USER_WORKSPACE}/install/setup.bash ]; then source ${USER_WOR
 
 # Actually build workspace
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
-    && colcon build
+    && colcon build --symlink-install --packages-select-regex '^blue_.*$' && \
+    colcon build --packages-skip-regex '^blue_.*$'
 
 FROM robot AS desktop
 
@@ -240,7 +242,8 @@ FROM desktop_unbuilt AS desktop
 # Modify the 'colcon build' line to be 'MAKEFLAGS="-j1 -l1" colcon build'
 # This will limit the amount of RAM that colcon is allowed to use
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
-    && colcon build
+    && colcon build --symlink-install --packages-select-regex '^blue_.*$' && \
+    colcon build --packages-skip-regex '^blue_.*$'
 
 # This repetition doesn't exactly sit right ... but I can't quite figure
 # out how to make this work without repeating either these instructions or
@@ -287,3 +290,11 @@ RUN sudo apt-get update \
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
 ENV QT_X11_NO_MITSHM=1
+
+# Add pretty colors to bash terminal
+RUN echo 'export PS1="\[\033[01;32m\]\u@\h:\[\033[01;34m\]\w\[\033[00m\]\$ "' >> ~/.bashrc && \
+    echo 'alias ls="ls --color=auto"' >> ~/.bashrc && \
+    echo 'export CLICOLOR=1' >> ~/.bashrc && \
+    echo 'export LSCOLORS=GxFxCxDxBxegedabagaced' >> ~/.bashrc &&\
+    echo 'printf "\e]11;#000000\e\\\n"' >> ~/.bashrc && \
+    echo 'source ~/.bashrc' >> ~/.bash_profile

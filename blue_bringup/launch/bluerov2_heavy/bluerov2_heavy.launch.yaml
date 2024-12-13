@@ -20,6 +20,7 @@ launch:
         - value: gazebo
         - value: mocap
         - value: camera
+        - value: pnp
 
   - arg:
       name: use_sim
