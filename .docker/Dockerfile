@@ -44,9 +44,10 @@ RUN apt-get -q update \
 #   - Installing blue deps using pip, apt and rosdep
 #   - Installs the remaining blue dependencies from blue_robot.repos
 #   - Installs deps from rosdep for all src dependencies
-#   - colcon build
 #
-FROM ci AS robot
+# robot_unbuilt **does not** colcon build, to save time
+#
+FROM ci AS robot_unbuilt
 
 #
 # Ubuntu 24.04 "Noble", which is used as the base image for
@@ -118,16 +119,19 @@ RUN sudo apt-get -q update \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
 
-# Actually build workspace
-RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
-    && colcon build
-
-RUN echo "source ${USER_WORKSPACE}/install/setup.bash" >> /home/$USERNAME/.bashrc \
+RUN echo "if [ -f ${USER_WORKSPACE}/install/setup.bash ]; then source ${USER_WORKSPACE}/install/setup.bash; fi" >> /home/$USERNAME/.bashrc \
     && echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /home/$USERNAME/.bashrc \
     && echo "source $VIRTUAL_ENV/bin/activate" >> /home/$USERNAME/.bashrc \
     && echo "\n# Ensure colcon is run in the venv\nalias colcon='python3 -m colcon'" >> /home/$USERNAME/.bashrc
 
-FROM robot AS desktop
+# Finally, build
+FROM robot_unbuilt AS robot
+
+# Actually build workspace
+RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
+    && colcon build
+
+FROM robot_unbuilt AS desktop_unbuilt
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GZ_VERSION=harmonic
@@ -204,12 +208,6 @@ RUN sudo apt-get -q update \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
 
-# For users that build this on a laptop or system with limited RAM,
-# Modify the 'colcon build' line to be 'MAKEFLAGS="-j1 -l1" colcon build'
-# This will limit the amount of RAM that colcon is allowed to use
-RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
-    && colcon build
-
 # Setup the simulation environment variables
 RUN  <<EOT cat >> /home/$USERNAME/.bashrc
 
@@ -225,6 +223,40 @@ export GZ_SIM_SYSTEM_PLUGIN_PATH=\$HOME/ardupilot_gazebo/build:\$GZ_SIM_SYSTEM_P
 # Add ardupilot_gazebo models and worlds
 export GZ_SIM_RESOURCE_PATH=\$HOME/ardupilot_gazebo/models:\$HOME/ardupilot_gazebo/worlds:\$GZ_SIM_RESOURCE_PATH
 EOT
+
+
+FROM desktop_unbuilt AS desktop
+
+# For users that build this on a laptop or system with limited RAM,
+# Modify the 'colcon build' line to be 'MAKEFLAGS="-j1 -l1" colcon build'
+# This will limit the amount of RAM that colcon is allowed to use
+RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
+    && colcon build
+
+# This repetition doesn't exactly sit right ... but I can't quite figure
+# out how to make this work without repeating either these instructions or
+# the colcon build
+FROM desktop_unbuilt AS desktop-nvidia_unbuilt
+
+# Install NVIDIA software
+RUN sudo apt-get update \
+    && sudo apt-get -q -y upgrade \
+    && sudo apt-get install -y -qq --no-install-recommends \
+    libglvnd0 \
+    libgl1 \
+    libglx0 \
+    libegl1 \
+    libxext6 \
+    libx11-6 \
+    && sudo apt-get autoremove -y \
+    && sudo apt-get clean -y \
+    && sudo rm -rf /var/lib/apt/lists/*
+
+# Env vars for the nvidia-container-runtime.
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+ENV QT_X11_NO_MITSHM=1
+
 
 FROM desktop AS desktop-nvidia
 
