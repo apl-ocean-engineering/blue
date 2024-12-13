@@ -39,6 +39,8 @@ RUN apt-get -q update \
     && rm -rf /var/lib/apt/lists/*
 
 # This stage includes
+#   - Adding the non-root user to sudoers
+#   - Installing and configuring fixuid
 #   - Switching to the non-root user
 #   - Copying 'blue' source from this repo into the non-root user's workspace
 #   - Installing blue deps using pip, apt and rosdep
@@ -51,7 +53,7 @@ FROM ci AS robot_unbuilt
 
 #
 # Ubuntu 24.04 "Noble", which is used as the base image for
-# jazzy and rolling images, now includes a user "ubuntu" at UID 1000
+# jazzy and rolling images, now includes a "built-in" user "ubuntu" at UID 1000
 ARG USERNAME=ubuntu
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
@@ -60,6 +62,16 @@ RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && usermod -a -G dialout $USERNAME \
     && echo "source /usr/share/bash-completion/completions/git" >> /home/$USERNAME/.bashrc
+
+# Install fixuid
+RUN wget -O - https://github.com/boxboat/fixuid/releases/download/v0.6.0/fixuid-0.6.0-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - && \
+    chown root:root /usr/local/bin/fixuid && \
+    chmod 4755 /usr/local/bin/fixuid && \
+    mkdir -p /etc/fixuid && \
+    printf "user: ${USERNAME}\ngroup: ${USERNAME}\n" > /etc/fixuid/config.yml
+
+ENTRYPOINT ["fixuid", "-q"]
+CMD ["/bin/bash"]
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -124,14 +136,11 @@ RUN echo "if [ -f ${USER_WORKSPACE}/install/setup.bash ]; then source ${USER_WOR
     && echo "source $VIRTUAL_ENV/bin/activate" >> /home/$USERNAME/.bashrc \
     && echo "\n# Ensure colcon is run in the venv\nalias colcon='python3 -m colcon'" >> /home/$USERNAME/.bashrc
 
-# Finally, build
-FROM robot_unbuilt AS robot
-
 # Actually build workspace
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
     && colcon build
 
-FROM robot_unbuilt AS desktop_unbuilt
+FROM robot AS desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GZ_VERSION=harmonic
