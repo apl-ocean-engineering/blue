@@ -38,6 +38,10 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          # Pin buildx to this version
+          # Issues with setting "*.cache-to=" below with v0.19.2
+          version: v0.18.0
 
       - if: env.PUSH == 'true'
         name: Log into registry
@@ -130,4 +134,4 @@ jobs:
           set: |
             *.platform=linux/amd64
             *.cache-from=type=registry,ref=ghcr.io/${{ steps.lowercase-repo.outputs.repository }}:cache-${{ matrix.ROS_DISTRO }}
-            *.cache-to=local,dest=/tmp
+            *.cache-to=
