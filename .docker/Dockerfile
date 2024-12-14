@@ -49,6 +49,7 @@ RUN apt-get -q update \
 #   - colcon build
 #
 FROM ci AS robot
+ARG TARGETPLATFORM
 
 #
 # Ubuntu 24.04 "Noble", which is used as the base image for
@@ -63,7 +64,15 @@ RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && echo "source /usr/share/bash-completion/completions/git" >> /home/$USERNAME/.bashrc
 
 # Install fixuid
-RUN wget -O - https://github.com/boxboat/fixuid/releases/download/v0.6.0/fixuid-0.6.0-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - && \
+RUN echo "!!! $TARGETPLATFORM"
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+        ARCH="arm64"; \
+    elif [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+        ARCH="amd64"; \
+    else \
+        exit 1; \
+    fi && \
+    wget -O - https://github.com/boxboat/fixuid/releases/download/v0.6.0/fixuid-0.6.0-linux-$ARCH.tar.gz | tar -C /usr/local/bin -xzf - && \
     chown root:root /usr/local/bin/fixuid && \
     chmod 4755 /usr/local/bin/fixuid && \
     mkdir -p /etc/fixuid && \
