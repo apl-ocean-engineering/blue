@@ -64,7 +64,6 @@ RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && echo "source /usr/share/bash-completion/completions/git" >> /home/$USERNAME/.bashrc
 
 # Install fixuid
-RUN echo "!!! $TARGETPLATFORM"
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
         ARCH="arm64"; \
     elif [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
