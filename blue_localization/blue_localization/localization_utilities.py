@@ -97,12 +97,21 @@ class LocalizationResult:
     Dataclass to store localization result
     """
 
-    rvec: np.array
-    tvec: np.array
-    cam_rot: np.array
-    cam_trans: np.array
-    tag_count: int
-    reprojection_error: float
+    rvec: Optional[np.array] = None
+    tvec: Optional[np.array] = None
+    cam_rot: Optional[np.array] = None
+    cam_trans: Optional[np.array] = None
+    tag_count: Optional[np.array] = None
+    reprojection_error: Optional[float] = None
+
+    def has_any_none(self) -> bool:
+        """
+        Checks if any of the attributes are None.
+
+        Returns:
+            bool: True if any attribute is None, otherwise False.
+        """
+        return any(getattr(self, field) is None for field in self.__dataclass_fields__)
 
 
 @dataclass

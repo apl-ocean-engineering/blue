@@ -22,6 +22,7 @@ import os
 import time
 from abc import ABC, abstractmethod
 from collections import deque
+from pathlib import Path
 from typing import Any, Deque
 
 import cv2
@@ -798,7 +799,6 @@ class PNPLocalizer(PoseLocalizer):
         results = self.compute_pose(matched_tags)
 
         if results.has_any_none():
-            self.get_logger().info("No Results", throttle_duration_sec=1)
             self.get_logger().info(
                 f"{len(matched_tags[0])} tags but no results", throttle_duration_sec=1
             )
@@ -881,9 +881,12 @@ class PNPLocalizer(PoseLocalizer):
 
     def compute_pose(self, matched_tags: MatchedDetections) -> LocalizationResult:
         results = LocalizationResult()
-        if len(matched_tags[0]) <= 1:
+        if len(matched_tags[0]) < 1:
             if self.verbose:
-                self.get_logger().info("Not enough tags detected! Skipping")
+                self.get_logger().info(
+                    f"Tags: {len(matched_tags[0])} - Not enough tags detected! Skipping",
+                    throttle_duration_sec=1,
+                )
             return results
 
         object_points = []
