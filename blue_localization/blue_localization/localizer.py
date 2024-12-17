@@ -794,14 +794,13 @@ class PNPLocalizer(PoseLocalizer):
         matched_tags = self.fiducial_map.match_detections(self._current_detections)
 
         self.get_logger().info(
-            f"Found {len(matched_tags[0])} tags", throttle_duration_sec=1
+            f"Found {len(matched_tags[0])} matched tags, {len(matched_tags[1])} unmatched tags",
+            throttle_duration_sec=1,
         )
         results = self.compute_pose(matched_tags)
 
         if results.has_any_none():
-            self.get_logger().info(
-                f"{len(matched_tags[0])} tags but no results", throttle_duration_sec=1
-            )
+            self.get_logger().info("No results", throttle_duration_sec=1)
             return
 
         rot_mat = results.cam_rot
