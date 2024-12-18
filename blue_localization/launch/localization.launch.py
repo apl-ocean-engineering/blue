@@ -173,6 +173,10 @@ def generate_launch_description() -> LaunchDescription:
             parameters=[
                 {"fiducial_map_url": fiducial_map_url, "use_sim_time": use_sim_time},
             ],
+            remappings=[
+                ("/fiducials", "/tags"),
+                ("/camera_info", "/camera/camera_info"),
+            ],
             condition=IfCondition(
                 PythonExpression(["'", localization_source, "' == 'pnp'"])
             ),

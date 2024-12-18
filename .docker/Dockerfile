@@ -147,8 +147,7 @@ RUN echo "if [ -f ${USER_WORKSPACE}/install/setup.bash ]; then source ${USER_WOR
 
 # Actually build workspace
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
-    && colcon build --symlink-install --packages-select-regex '^blue_.*$' && \
-    colcon build --packages-skip-regex '^blue_.*$'
+    && colcon build
 
 FROM robot AS desktop
 
@@ -250,8 +249,7 @@ FROM desktop_unbuilt AS desktop
 # Modify the 'colcon build' line to be 'MAKEFLAGS="-j1 -l1" colcon build'
 # This will limit the amount of RAM that colcon is allowed to use
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
-    && colcon build --symlink-install --packages-select-regex '^blue_.*$' && \
-    colcon build --packages-skip-regex '^blue_.*$'
+    && colcon build
 
 # This repetition doesn't exactly sit right ... but I can't quite figure
 # out how to make this work without repeating either these instructions or
